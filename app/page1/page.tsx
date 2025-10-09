@@ -6,12 +6,14 @@ export default function GamePage() {
   const router = useRouter();
   return (
     <ConfirmBack>
-      <div style={{ padding: 24 }}>
-        <h1>Game Page</h1>
+      <div className='space-y-12' style={{ padding: 24 }}>
+        <h1 className='text-4xl'>Game Page</h1>
         <p>
           Try pressing the browser back button. You should see a confirm dialog.
         </p>
-        <div onClick={() => router.push("/")}>Go Home (normal link)</div>
+        <div className='cursor-pointer' onClick={() => router.push("/")}>
+          Go Home
+        </div>
       </div>
     </ConfirmBack>
   );
