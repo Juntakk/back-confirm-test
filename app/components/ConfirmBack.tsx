@@ -1,40 +1,49 @@
 "use client";
 import React, { useEffect, useRef } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 
+/**
+ * Wrap this around a page's contents to confirm before leaving via browser back.
+ */
 export default function ConfirmBack({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
-
-  const prevPathRef = useRef<string | null>(null);
   const confirmedRef = useRef(false);
 
   useEffect(() => {
-    // Save previous path
-    prevPathRef.current = pathname;
-
-    const handlePopState = () => {
+    const handlePopState = (event: PopStateEvent) => {
       if (confirmedRef.current) return;
 
       const ok = window.confirm("Your current game progress will be lost!");
       if (!ok) {
-        // Cancel: push dummy state so next back triggers popstate
+        // Cancel back: push a new state to stay on page
         window.history.pushState(null, "", window.location.href);
       } else {
         confirmedRef.current = true;
-        router.push(prevPathRef.current || "/"); // go to previous route
+        router.back();
       }
     };
 
-    window.history.pushState(null, "", window.location.href);
-    window.addEventListener("popstate", handlePopState);
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      // Warn if user tries to refresh or close tab
+      event.preventDefault();
+      event.returnValue = "";
+    };
 
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [pathname, router]);
+    // Push one dummy state so the next "Back" triggers popstate
+    window.history.pushState(null, "", window.location.href);
+
+    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [router]);
 
   return <>{children}</>;
 }
